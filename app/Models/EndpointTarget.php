@@ -35,17 +35,21 @@ class EndpointTarget extends Model
             $headers = strtr($headers, $trans);
         }
 
-        $headers = json_decode($headers, true);
+        $headersArr = json_decode($headers, true);
 
-        if (!$headers) {
-            // pass through all headers except the "host"
-            $headers = collect(request()->headers->all())->except("host")->toArray();
+        if (strlen($headers) && !$headersArr) {
+            Log::error('Invalid JSON for the headers; falling back to the original headers.', ['headers' => $headers]);
         }
 
+        if (!$headersArr) {
+            // pass through all headers except the "host"
+            $headersArr = collect(request()->headers->all())->except("host")->toArray();
+        }
+        
         // append a special header for tagging telescope entity
-        $headers['x-target-id'] = $this->id;
+        $headersArr['x-target-id'] = $this->id;
 
-        return $headers;
+        return $headersArr;
     }
 
     public function buildBody(): array
@@ -58,9 +62,13 @@ class EndpointTarget extends Model
             $body = strtr($body, $trans);
         }
 
-        $body = json_decode($body, true);
+        $bodyArr = json_decode($body, true);
 
-        return $body ?: request()->all();
+        if (strlen($body) && !$bodyArr) {
+            Log::error('Invalid JSON for the body; falling back to the original payload.', ['body' => $body]);
+        }
+
+        return $bodyArr ?: request()->all();
     }
 
     public static function parsePlaceHolders(string $input): array
@@ -108,7 +116,7 @@ class EndpointTarget extends Model
         }
 
         $result = $this->evaluate($this->rule);
-        Log::warning(sprintf('rule [%s] evaluated', $this->rule), [$result]);
+        Log::warning(sprintf('%s: %s', $result ? 'TRUE' : 'FALSE', $this->rule));
 
         return $result;
     }

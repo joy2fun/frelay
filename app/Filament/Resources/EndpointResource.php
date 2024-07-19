@@ -3,10 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EndpointResource\Pages;
-use App\Filament\Resources\EndpointResource\RelationManagers;
 use App\Filament\Resources\EndpointResource\RelationManagers\TargetsRelationManager;
 use App\Models\Endpoint;
-use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
@@ -14,8 +12,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action as ActionsAction;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class EndpointResource extends Resource
 {
@@ -25,14 +21,14 @@ class EndpointResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->inlineLabel()
+        return $form
             ->schema([
                 Section::make([
                     Forms\Components\TextInput::make('title')
                         ->required(),
                     Forms\Components\TextInput::make('slug')
                         ->prefix('/api/endpoint/')
-                        ->extraAttributes(['class' => 'w-2/3'])
+                        ->unique()
                         ->required(),
                 ])->columns(1)
                     ->extraAttributes(['class' => 'py-2 px-2'])
@@ -46,6 +42,10 @@ class EndpointResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('url')->disabledClick(),
+                Tables\Columns\TextColumn::make('targets_count')
+                    ->counts('targets')
+                    ->badge()
+                    ->label('Targets'),
                 Tables\Columns\ToggleColumn::make('enabled'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -62,6 +62,7 @@ class EndpointResource extends Resource
             ->actions([
                 ActionsAction::make('Logs')->url(fn (Endpoint $ep) => $ep->telescope_url)->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

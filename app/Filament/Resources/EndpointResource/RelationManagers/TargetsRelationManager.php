@@ -2,15 +2,15 @@
 
 namespace App\Filament\Resources\EndpointResource\RelationManagers;
 
-use App\Models\EndpointTarget;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
-use Filament\Tables\Actions\Action;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Models\EndpointTarget;
+use Filament\Tables\Actions\Action;
+use Symfony\Component\ExpressionLanguage\SyntaxError;
+use Filament\Resources\RelationManagers\RelationManager;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class TargetsRelationManager extends RelationManager
 {
@@ -23,17 +23,43 @@ class TargetsRelationManager extends RelationManager
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Toggle::make('enabled')->inline(false)->default(1),
-                Forms\Components\Radio::make('method')->inline()->default('POST')->inlineLabel(false)
-                    ->options(['GET' => 'GET', 'POST' => 'POST', 'PUT' => 'PUT', 'DELETE' => 'DELETE'])
-                    ->columnSpan(1),
                 Forms\Components\TextInput::make('uri')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('rule'),
-                Forms\Components\Textarea::make('headers'),
-                Forms\Components\Textarea::make('body'),
+                Forms\Components\Radio::make('method')->inline()->default('POST')->inlineLabel(false)
+                    ->options(['GET' => 'GET', 'POST' => 'POST', 'PUT' => 'PUT', 'DELETE' => 'DELETE'])
+                    ->columnSpan(1),
+                Forms\Components\Textarea::make('rule')->rules([
+                    fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail) {
+                        try {
+                            (new ExpressionLanguage())->lint($value, ['req', 'now']);
+                        } catch (SyntaxError $e) {
+                            $fail($e->getMessage());
+                        }
+                    }
+                ]),
+                Forms\Components\Textarea::make('headers')->rules([
+                    $this->lintPlaceholders()
+                ])->rows(5),
+                Forms\Components\Textarea::make('body')->rules([
+                    $this->lintPlaceholders()
+                ])->rows(5),
             ]);
+    }
+
+    private function lintPlaceholders()
+    {
+        return fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail) {
+            try {
+                $lang = new ExpressionLanguage;
+                $exprs = EndpointTarget::parsePlaceHolders($value);
+                foreach ($exprs as $expr) {
+                    $lang->lint($expr, ['req', 'now']);
+                }
+            } catch (SyntaxError $e) {
+                $fail($e->getMessage());
+            }
+        };
     }
 
     public function table(Table $table): Table
