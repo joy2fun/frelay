@@ -10,8 +10,8 @@ RUN curl -o /usr/local/bin/composer https://getcomposer.org/download/latest-stab
     && composer install -n --no-dev --no-progress --optimize-autoloader \
     && composer clear-cache \
     && mv .env.example .env \
-    && mkdir -p database/larelay \
-    && touch database/larelay/database.sqlite \
+    && mkdir -p database/frelay \
+    && touch database/frelay/database.sqlite \
     && chown -R www-data:www-data database
 
-VOLUME /var/www/html/database/larelay
+VOLUME /var/www/html/database/frelay
