@@ -33,6 +33,8 @@ class EndpointController extends Controller
 
         /** @var \Illuminate\Http\Client\Response */
         $response = current($responses);
-        return response($response->body(), $response->status(), $response->headers());
+        return $response 
+            ? response($response->body(), $response->status(), $response->headers())
+            : abort(500);
     }
 }
