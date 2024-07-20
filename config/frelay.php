@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'path' => env('FRELAY_PATH'),
+    'path' => env('FRELAY_PATH', 'admin'),
 ];
