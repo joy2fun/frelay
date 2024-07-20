@@ -14,7 +14,7 @@ Features:
 ### Using Docker
 
 ```sh
-docker run --name frelay -p 8000:80 ghcr.io/joy2fun/frelay:main
+docker run -d --name frelay -p 8000:80 ghcr.io/joy2fun/frelay:main
 
 # generate app key
 docker exec -it frelay php artisan key:generate
@@ -22,7 +22,7 @@ docker exec -it frelay php artisan key:generate
 # run database migration and seeding
 docker exec -it frelay php artisan migrate
 
-# create administrator panel login account
+# create an administrator panel login account
 docker exec -it frelay php artisan make:filament-user
 # or without prompt
 docker exec -it frelay php artisan make:filament-user --name={NAME} --email={EMAIL} --password={PASSWORD}
