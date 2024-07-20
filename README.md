@@ -1,66 +1,80 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Frelay
 
-## About Laravel
+Frelay is a tool that allows you to define webhook endpoints and then forward the requests received by those endpoints to other URL targets.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Features:
+  - Includes a built-in web-based control panel
+  - Ability to fan out (forward) requests to multiple URL targets
+  - Filtering rules
+  - Customize the headers and body of forwarded requests using templates
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Installation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Using Docker
 
-## Learning Laravel
+```sh
+docker run --name frelay -p 8000:80 ghcr.io/joy2fun/frelay:main
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# generate app key
+docker exec -it frelay php artisan key:generate
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+# run database migration and seeding
+docker exec -it frelay php artisan migrate
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# create administrator panel login account
+docker exec -it frelay php artisan make:filament-user
+# or without prompt
+docker exec -it frelay php artisan make:filament-user --name={NAME} --email={EMAIL} --password={PASSWORD}
+```
 
-## Laravel Sponsors
+Now you can head to `http://localhost:8000/admin` and login.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Available Enviroment Variables
 
-### Premium Partners
+```sh
+# administrator panel route path
+FRELAY_PATH=admin
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+# timezone
+APP_TIMEZONE=UTC
 
-## Contributing
+# telescope route path
+TELESCOPE_PATH=telescope
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Filterting rules
 
-## Code of Conduct
+If any filtering rule has been defined for an endpoint target, Frelay will skip forwarding the request to that target when the rule expression evaluates to `false`, `null` or `0` etc.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Frelay's filtering rules are powered by [Symfony Expression Language](https://symfony.com/doc/current/reference/formats/expression_language.html). The following examples can help you quickly understand the basic usage and application of these filtering rules.
 
-## Security Vulnerabilities
+Forward the request to the target only if the `log_level` parameter in the request is equal to "error" :
+```js
+req.input('log_level') == "error"
+```
+**You can access any `GET` or `POST` parameter using `input` method on `req` [object](https://laravel.com/docs/11.x/requests#input).**
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```js
+req.input('log_level') in ["error", "warning"]
+```
+Checks if `log_level` parameter is either "error" or "warning".
 
-## License
+```js
+now.format('N') in [1, 2, 3, 4, 5]
+```
+Checks if the current day is a weekday. `now` is a [Carbon](https://carbon.nesbot.com/docs/) object, which is a PHP library that provides robust date and time manipulation capabilities, including the ability to convert dates and times to many different [formats](https://www.php.net/manual/en/datetime.format.php#refsect1-datetime.format-parameters).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Override request headers and/or body using templates
+
+Rename the `message` parameter to `error` before forwarding the request to the target.
+```json
+{
+  "error": "{{ req.input('message') }}"
+}
+```
+
+## Debugging
+
+Frelay is shipped with integration for [Laravel Telescope](https://laravel.com/docs/11.x/telescope)
+, which allows you to easily inspect all incoming requests and forwarded requests (HTTP Client requests in Laravel).
