@@ -28,7 +28,7 @@ class EndpointResource extends Resource
                         ->required(),
                     Forms\Components\TextInput::make('slug')
                         ->prefix('/api/endpoint/')
-                        ->unique()
+                        ->unique(ignoreRecord: true)
                         ->required(),
                 ])->columns(1)
                     ->extraAttributes(['class' => 'py-2 px-2'])
