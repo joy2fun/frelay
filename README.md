@@ -20,7 +20,7 @@ docker run -d --name frelay -p 8000:80 ghcr.io/joy2fun/frelay:main
 docker exec -it frelay php artisan key:generate
 
 # run database migration and seeding
-docker exec -it frelay php artisan migrate
+docker exec -it frelay php artisan migrate --seed
 
 # create an administrator panel login account
 docker exec -it frelay php artisan make:filament-user
