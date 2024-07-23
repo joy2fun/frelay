@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             $endpoint->save();
             $endpoint->targets()->createMany([
                 [
-                    'title' => 'realy GET only',
+                    'title' => 'relay GET only',
                     'method' => 'GET',
                     'uri' => 'https://httpbin.org/get',
                     'rule' => "req.isMethod('get')",

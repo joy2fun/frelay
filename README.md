@@ -16,7 +16,7 @@ Features:
 ```sh
 docker run -d --name frelay -p 8000:80 ghcr.io/joy2fun/frelay:main
 
-# generate app key
+# generate app key. required for newly created container
 docker exec -it frelay php artisan key:generate
 
 # run database migration and seeding
@@ -72,6 +72,25 @@ Rename the `message` parameter to `error` before forwarding the request to the t
 {
   "error": "{{ req.input('message') }}"
 }
+```
+Ensure the headers and body are valid JSON strings; Or the original headers or body will be used when forwarding.
+
+## Database configuration
+
+By default, SQLite is used for persistent data storage. The database file is stored in the `VOLUME` `/var/www/html/database/frelay`. You may use a named volume :
+```sh
+docker run -d --name frelay \
+    -v frelay_data:/var/www/html/database/frelay \
+    -p 8000:80 ghcr.io/joy2fun/frelay:main
+```
+
+If you prefer to use another database, such as `PostgreSQL` or `MySQL`, adjust the environment variables accordingly:
+```
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
 ## Debugging
