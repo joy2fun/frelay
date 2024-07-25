@@ -84,8 +84,9 @@ docker run -d --name frelay \
     -p 8000:80 ghcr.io/joy2fun/frelay:main
 ```
 
-If you prefer to use another database, such as `PostgreSQL` or `MySQL`, adjust the environment variables accordingly:
+If you prefer to use another [database](https://laravel.com/docs/11.x/database#configuration), such as `PostgreSQL` or `MySQL`, adjust the environment variables accordingly:
 ```
+DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=laravel
