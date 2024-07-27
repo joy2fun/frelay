@@ -62,7 +62,7 @@ class EndpointResource extends Resource
             ->actions([
                 ActionsAction::make('Logs')->url(fn (Endpoint $ep) => $ep->telescope_url)->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()->hiddenLabel(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

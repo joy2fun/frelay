@@ -82,7 +82,7 @@ class TargetsRelationManager extends RelationManager
             ->actions([
                 Action::make('Logs')->url(fn (EndpointTarget $ep) => $ep->telescope_url)->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()->hiddenLabel(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

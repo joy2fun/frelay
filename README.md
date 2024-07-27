@@ -73,7 +73,7 @@ Rename the `message` parameter to `error` before forwarding the request to the t
   "error": "{{ req.input('message') }}"
 }
 ```
-Ensure the headers and body are valid JSON strings; Or the original headers or body will be used when forwarding.
+**Ensure the headers and body are valid JSON strings; Or the original headers or body will be used when forwarding.**
 
 ## Database configuration
 
