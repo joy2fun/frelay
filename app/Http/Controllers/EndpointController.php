@@ -31,10 +31,17 @@ class EndpointController extends Controller
             });
         });
 
-        /** @var \Illuminate\Http\Client\Response */
-        $response = current($responses);
-        return $response 
-            ? response($response->body(), $response->status(), $response->headers())
-            : abort(500);
+        return $this->response(current($responses));
+    }
+
+    private function response($response)
+    {
+        if (!$response) abort(500);
+
+        if (str($response->header('content-type'))->contains('json')) {
+            return response()->json($response->body(), $response->status());
+        }
+
+        return response($response->body(), $response->status());
     }
 }
