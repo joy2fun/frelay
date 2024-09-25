@@ -7,7 +7,7 @@ on:
       - '*'
 
 env:
-  project: aliyun-rest
+  project: frelay
   REGISTRY: registry.cn-shanghai.aliyuncs.com
   IMAGE_NAME: dysh/mirror
 
