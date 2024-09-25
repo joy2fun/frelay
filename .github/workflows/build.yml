@@ -1,4 +1,4 @@
-name: Create and publish a Docker image
+name: build & deploy
 
 on:
   push:
@@ -7,8 +7,9 @@ on:
       - '*'
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  project: aliyun-rest
+  REGISTRY: registry.cn-shanghai.aliyuncs.com
+  IMAGE_NAME: dysh/mirror
 
 jobs:
   build-and-push-image:
@@ -19,25 +20,29 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2
+      - name: Login to aliyun
+        uses: aliyun/acr-login@v1
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          login-server: '${{ env.REGISTRY }}'
+          username: 'docloud'
+          password: '${{ secrets.REGISTRY_PASSWORD }}'
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: build & push to aliyun
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.project }} .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.project }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+      - name: Dispatch deploy event
+        uses: peter-evans/repository-dispatch@v3
         with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          event-type: deploy
+          repository: joy2fun/ansible
+          token: ${{ secrets.PAT }}
+          client-payload: |-
+            {
+              "host": "w1",
+              "project": "${{ env.project }}",
+              "type": "laravel"
+            }
